@@ -8,15 +8,15 @@ use std::time::Instant;
 #[derive(Clone, PartialOrd, Ord, PartialEq, Eq)]
 struct Item {
     #[pyo3(get, set)]
-    value: i32,
+    value: i64,
     #[pyo3(get, set)]
-    priority: i32,
+    priority: i64,
 }
 
 #[pymethods]
 impl Item {
     #[new]
-    fn new(value: i32, priority: i32) -> Self {
+    fn new(value: i64, priority: i64) -> Self {
         Item { value, priority }
     }
 }
