@@ -57,6 +57,10 @@ impl PriorityQueue {
         self.heap.pop().map(|Reverse(item)| item)
     }
 
+    fn peek(&mut self) -> Option<Item> {
+        self.heap.peek().map(|Reverse(item)| item.clone())
+    }
+
     fn __len__(&self) -> usize {
         self.heap.len()
     }
