@@ -9,16 +9,16 @@ use numpy::PyArrayDyn;
 #[derive(Clone, PartialOrd, Ord, PartialEq, Eq)]
 struct Item {
     #[pyo3(get, set)]
-    value: i64,
-    #[pyo3(get, set)]
     priority: i64,
+    #[pyo3(get, set)]
+    value: i64,
 }
 
 #[pymethods]
 impl Item {
     #[new]
-    fn new(value: i64, priority: i64) -> Self {
-        Item { value, priority }
+    fn new(priority: i64, value: i64) -> Self {
+        Item { priority, value }
     }
 }
 
@@ -43,7 +43,7 @@ impl PriorityQueue {
         let vec: Vec<Reverse<Item>> = array
             .iter()
             .enumerate()
-            .map(|(i, &priority)| Reverse(Item { value: i as i64, priority }))
+            .map(|(i, &priority)| Reverse(Item { priority, value: i as i64 }))
             .collect();
         let heap = BinaryHeap::from(vec);
         Ok(PriorityQueue { heap })
