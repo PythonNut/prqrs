@@ -57,6 +57,10 @@ impl PriorityQueue {
         self.heap.pop().map(|Reverse(item)| item)
     }
 
+    fn __len__(&self) -> usize {
+        self.heap.len()
+    }
+
     fn is_empty(&self) -> bool {
         self.heap.is_empty()
     }
