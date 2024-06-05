@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::time::Instant;
 use numpy::PyArrayDyn;
@@ -25,7 +24,7 @@ impl Item {
 #[pyclass]
 #[derive(Clone)]
 struct PriorityQueue {
-    heap: BinaryHeap<Reverse<Item>>,
+    heap: BinaryHeap<Item>,
 }
 
 #[pymethods]
@@ -40,25 +39,25 @@ impl PriorityQueue {
     #[staticmethod]
     fn from_numpy(array: &PyArrayDyn<i64>) -> PyResult<Self> {
         let array = unsafe { array.as_array() };
-        let vec: Vec<Reverse<Item>> = array
+        let vec: Vec<Item> = array
             .iter()
             .enumerate()
-            .map(|(i, &priority)| Reverse(Item { priority, value: i as i64 }))
+            .map(|(i, &priority)| Item { priority, value: i as i64 })
             .collect();
         let heap = BinaryHeap::from(vec);
         Ok(PriorityQueue { heap })
     }
 
     fn push(&mut self, item: Item) {
-        self.heap.push(Reverse(item));
+        self.heap.push(item);
     }
 
     fn pop(&mut self) -> Option<Item> {
-        self.heap.pop().map(|Reverse(item)| item)
+        self.heap.pop()
     }
 
     fn peek(&mut self) -> Option<Item> {
-        self.heap.peek().map(|Reverse(item)| item.clone())
+        self.heap.peek().map(|item| item.clone())
     }
 
     fn __len__(&self) -> usize {
