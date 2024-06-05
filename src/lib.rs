@@ -3,6 +3,7 @@ use pyo3::wrap_pyfunction;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::time::Instant;
+use numpy::PyArrayDyn;
 
 #[pyclass]
 #[derive(Clone, PartialOrd, Ord, PartialEq, Eq)]
@@ -36,6 +37,18 @@ impl PriorityQueue {
         }
     }
 
+    #[staticmethod]
+    fn from_numpy(array: &PyArrayDyn<i64>) -> PyResult<Self> {
+        let array = unsafe { array.as_array() };
+        let vec: Vec<Reverse<Item>> = array
+            .iter()
+            .enumerate()
+            .map(|(i, &priority)| Reverse(Item { value: i as i64, priority }))
+            .collect();
+        let heap = BinaryHeap::from(vec);
+        Ok(PriorityQueue { heap })
+    }
+
     fn push(&mut self, item: Item) {
         self.heap.push(Reverse(item));
     }
@@ -49,32 +62,11 @@ impl PriorityQueue {
     }
 }
 
-#[pyfunction]
-fn benchmark_enqueue(pq: &mut PriorityQueue, items: Vec<Item>) -> String {
-    let start = Instant::now();
-    for item in items {
-        pq.push(item);
-    }
-    let duration = start.elapsed();
-    format!("Enqueue time: {:?}", duration)
-}
-
-#[pyfunction]
-fn benchmark_dequeue(pq: &mut PriorityQueue) -> String {
-    let start = Instant::now();
-    let mut count = 0;
-    while pq.pop().is_some() {
-        count += 1;
-    }
-    let duration = start.elapsed();
-    format!("Dequeue time: {:?}, Count: {}", duration, count)
-}
-
 #[pymodule]
 fn prqrs(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Item>()?;
     m.add_class::<PriorityQueue>()?;
-    m.add_function(wrap_pyfunction!(benchmark_enqueue, m)?)?;
-    m.add_function(wrap_pyfunction!(benchmark_dequeue, m)?)?;
+    // m.add_function(wrap_pyfunction!(benchmark_enqueue, m)?)?;
+    // m.add_function(wrap_pyfunction!(benchmark_dequeue, m)?)?;
     Ok(())
 }
