@@ -78,6 +78,12 @@ impl PriorityQueue {
         self.heap.push(item);
     }
 
+    fn push_batch(&mut self, items: &PyArrayDyn<i64>, priorities: &PyArrayDyn<f64>) {
+        let items = unsafe { items.as_array() };
+        let priorities = unsafe { priorities.as_array() };
+        items.iter().zip(priorities.iter()).for_each(|(&i, &p)| self.push(Item { priority: NotNanF64 {0: NotNan::new(p).unwrap()}, value: i as i64 }));
+    }
+
     fn pop(&mut self) -> Option<Item> {
         self.heap.pop()
     }
