@@ -1,14 +1,30 @@
+use numpy::PyArrayDyn;
+use ordered_float::NotNan;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use std::collections::BinaryHeap;
-use std::time::Instant;
-use numpy::PyArrayDyn;
+
+#[derive(Clone, PartialOrd, Ord, PartialEq, Eq)]
+struct NotNanF64(NotNan<f64>);
+impl FromPyObject<'_> for NotNanF64 {
+    fn extract_bound(ob: &Bound<'_, PyAny>) -> PyResult<Self> {
+        let f: f64 = ob.extract()?;
+        return Ok(NotNanF64 {
+            0: NotNan::new(f).unwrap(),
+        });
+    }
+}
+impl IntoPy<PyObject> for NotNanF64 {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        self.0.into_inner().into_py(py)
+    }
+}
 
 #[pyclass]
 #[derive(Clone, PartialOrd, Ord, PartialEq, Eq)]
 struct Item {
     #[pyo3(get, set)]
-    priority: i64,
+    priority: NotNanF64,
     #[pyo3(get, set)]
     value: i64,
 }
@@ -16,8 +32,13 @@ struct Item {
 #[pymethods]
 impl Item {
     #[new]
-    fn new(priority: i64, value: i64) -> Self {
-        Item { priority, value }
+    fn new(p: f64, value: i64) -> Self {
+        Item {
+            priority: NotNanF64 {
+                0: NotNan::new(p).unwrap(),
+            },
+            value,
+        }
     }
 }
 
@@ -37,12 +58,17 @@ impl PriorityQueue {
     }
 
     #[staticmethod]
-    fn from_numpy(array: &PyArrayDyn<i64>) -> PyResult<Self> {
+    fn from_numpy(array: &PyArrayDyn<f64>) -> PyResult<Self> {
         let array = unsafe { array.as_array() };
         let vec: Vec<Item> = array
             .iter()
             .enumerate()
-            .map(|(i, &priority)| Item { priority, value: i as i64 })
+            .map(|(i, &p)| Item {
+                priority: NotNanF64 {
+                    0: NotNan::new(p).unwrap(),
+                },
+                value: i as i64,
+            })
             .collect();
         let heap = BinaryHeap::from(vec);
         Ok(PriorityQueue { heap })
